@@ -3,3 +3,9 @@
 3. Activar: .\venv\Scripts\activate
 4. Instalar: pip install fastapi sqlalchemy psycopg2 uvicorn
 5. Ejecutar: uvicorn main:app --reload
+
+
+Para que funcione:
+En database.py:
+Cambiar en DATABASE_URL user por el nombre en postgres, por determinado casi siempre es postgres pero revisar
+y password por la contraseña cuando uno entra a postgres, donde dice prueba, va el nombre que le coloque a la tabla :)
