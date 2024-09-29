@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from sqlalchemy.orm import sessionmaker
-from database import engine, get_db  # Cambia a importación absoluta
+from database import engine, get_db 
 from models import Base, Item
 
 # Crear la aplicación FastAPI
