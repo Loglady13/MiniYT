@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # URL de conexión a PostgreSQL
-DATABASE_URL = "postgresql://user:password@localhost/prueba"
+DATABASE_URL = "postgresql://postgres:shashis@localhost/postgres"
 
 # Crear el motor de SQLAlchemy
 engine = create_engine(DATABASE_URL)

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="script.js"></script>
+</head>
+<body>
+    <div>
+        <form action="" id="addVideo" enctype="multipart/form-data">
+
+            <label for="">Video</label>
+            <button>
+                <input id="videoinput" type="file">
+            </button>
+
+            <label id='titleVideo' for="">Video Title</label>
+            <input id="titleNewVideo" type="text" placeholder="title">
+
+
+            <label for="">Description</label>
+            <textarea id="description" name="description" maxlength="300" placeholder="Máximo 300 caracteres"></textarea>
+
+            <label for="">thumbnail</label>
+            <input type="file">
+
+            <button type="submit" onclick="validateVideo(event)">Subir</button>
+
+        </form>
+    </div>
+</body>
+</html>
