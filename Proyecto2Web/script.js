@@ -1,53 +1,91 @@
 async function validateVideo(event) {
     event.preventDefault();  // Evita que el formulario recargue la página
 
-    const form = document.getElementById('AddVideo');
+    // Oculta los mensajes anteriores
+    document.getElementById('errorMessage').style.display = 'none';
+    document.getElementById('successMessage').style.display = 'none';
 
-    const videoInput = document.getElementById('videoinput');  // Obtiene el campo de video
-    const video = videoInput.files[0];  // Obtiene el primer archivo de video
+    //Video 
+    const videoInput = document.getElementById('videoinput');
+    const video = videoInput.files[0];
 
-    //Validations 
-
-    const videoFormat = video.type;  //Format
-    if (videoFormat !== 'video/mp4') {
-        alert('Please select a .mp4 file');
+    if (!video || video.type !== 'video/mp4') {
+        showError('Por favor selecciona un archivo .mp4 para el video');
         return false;
-      }
+    }
 
-    const videoSizeInMB = video.size / (1024 * 1024); //Max 10 MB
+    const videoSizeInMB = video.size / (1024 * 1024); // Max 10 MB
     if (videoSizeInMB > 10) {
-        alert('File exceeds the maximum file size of 10 MB');
+        showError('El archivo de video no debe exceder los 10 MB');
         return false;
     }
 
-    const title = document.forms['addVideo']['titleNewVideo'].value; //Title
-    if ( title == ""){
-        document.getElementById('titleVideo').innerHTML = "Title cannot be empty*";
+    const title = document.getElementById('titleNewVideo').value;
+    if (!title) {
+        showError('El título no puede estar vacío');
         return false;
     }
 
+    const description = document.getElementById('description').value;
+    if (description.length > 300) {
+        showError('La descripción no debe superar los 300 caracteres');
+        return false;
+    }
 
-    
+    const thumbnailInput = document.getElementById('newThumbnail');
+    const file = thumbnailInput.files[0];
+    if(!file){
+        showError('Por favor selecciona un archivo para el thumbnail');
+        return false;
+    }
 
-    const formData = new FormData();
-    formData.append('video', video);  // Agrega el archivo de video a formData
+    const maxSizeInBytes = 2 * 1024 * 1024;  // 2 MB en bytes
+
+    if (file.type === 'image/jpg' || file.type === 'image/jpeg') {
+        // Verificar tamaño solo si es imagen .jpg
+        if (file.size > maxSizeInBytes) {
+            console.error("El archivo de imagen debe pesar menos de 2MB");
+            return false;
+        }
+    } else if (file.type !== 'video/mp4') {
+        showError("Solo se aceptan archivos .jpg o .mp4");
+        return false;
+    }
+
+    // Muestra el indicador de carga
+    document.getElementById('loadingIndicator').style.display = 'block';
 
     try {
-        const response = await fetch('http://127.0.0.1:8000/upload_video', {  // Asegúrate de que la URL del servidor sea correcta
-            method: 'POST',
-            body: formData,
-        });
+        // Subir video y thumbnail
+        await saveFile(video);
+        if (file) await saveFile(file);
 
-        const result = await response.json();
-        console.log(result);  // Maneja la respuesta del servidor
-
-        if (response.ok) {
-            alert("Video subido exitosamente.");
-        } else {
-            alert("Error al subir el video.");
-        }
+        // Oculta el indicador de carga y muestra éxito
+        document.getElementById('loadingIndicator').style.display = 'none';
+        document.getElementById('successMessage').style.display = 'block';
 
     } catch (error) {
-        alert('Error al subir el archivo:', error);
+        showError('Error al subir el archivo. Por favor, inténtalo de nuevo.');
+        document.getElementById('loadingIndicator').style.display = 'none';
     }
+}
+
+async function saveFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('http://127.0.0.1:8000/upload_file', {
+        method: 'POST',
+        body: formData,
+    });
+
+    if (!response.ok) {
+        throw new Error('Error al subir el archivo');
+    }
+}
+
+function showError(message) {
+    const errorMessageDiv = document.getElementById('errorMessage');
+    errorMessageDiv.innerHTML = message;
+    errorMessageDiv.style.display = 'block';
 }

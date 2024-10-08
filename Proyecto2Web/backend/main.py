@@ -59,5 +59,34 @@ async def upload_video(video: UploadFile = File(...)):
             content={"status": "error", "detail": str(e)},
             status_code=500
         )
+    
+@app.post("/upload_file")
+async def upload_file(file: UploadFile = File(...)):
+    # Carpeta donde se almacenarán los archivos subidos
+    UPLOAD_FOLDER = './files'
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+    # Definir la ubicación del archivo
+    file_location = os.path.join(UPLOAD_FOLDER, file.filename)
+    
+    try:
+        # Guardar el archivo
+        with open(file_location, "wb") as f:
+            shutil.copyfileobj(file.file, f)
+        
+        # Devolver una respuesta exitosa con la información del archivo
+        return JSONResponse(
+            content={
+                "status": "success",
+                "file_path": file_location
+            },
+            status_code=200
+        )
+    except Exception as e:
+        # Manejar cualquier error que ocurra durante la subida de archivos
+        return JSONResponse(
+            content={"status": "error", "detail": str(e)},
+            status_code=500
+        )
 
 
