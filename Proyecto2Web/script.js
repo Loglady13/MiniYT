@@ -33,21 +33,21 @@ async function validateVideo(event) {
     }
 
     const thumbnailInput = document.getElementById('newThumbnail');
-    const file = thumbnailInput.files[0];
-    if(!file){
+    const thumbnail = thumbnailInput.files[0];
+    if(!thumbnail){
         showError('Por favor selecciona un archivo para el thumbnail');
         return false;
     }
 
     const maxSizeInBytes = 2 * 1024 * 1024;  // 2 MB en bytes
 
-    if (file.type === 'image/jpg' || file.type === 'image/jpeg') {
+    if (thumbnail.type === 'image/jpg' || thumbnail.type === 'image/jpeg') {
         // Verificar tamaño solo si es imagen .jpg
-        if (file.size > maxSizeInBytes) {
+        if (thumbnail.size > maxSizeInBytes) {
             console.error("El archivo de imagen debe pesar menos de 2MB");
             return false;
         }
-    } else if (file.type !== 'video/mp4') {
+    } else if (thumbnail.type !== 'video/mp4') {
         showError("Solo se aceptan archivos .jpg o .mp4");
         return false;
     }
@@ -57,8 +57,7 @@ async function validateVideo(event) {
 
     try {
         // Subir video y thumbnail
-        await saveFile(video);
-        if (file) await saveFile(file);
+        await saveFile(thumbnail, video);
 
         // Oculta el indicador de carga y muestra éxito
         document.getElementById('loadingIndicator').style.display = 'none';
@@ -70,9 +69,10 @@ async function validateVideo(event) {
     }
 }
 
-async function saveFile(file) {
+async function saveFile(thumbnail, video) {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('thumbnail', thumbnail);
+    formData.append('video', video);
 
     const response = await fetch('http://127.0.0.1:8000/upload_file', {
         method: 'POST',

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from sqlalchemy.orm import sessionmaker
 from database import engine, get_db 
-from models import Base, Item
+from models import Base, Video, FavoriteVideos, Comments
 from fastapi.responses import JSONResponse
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,56 +29,32 @@ app.add_middleware(
 # Crear la tabla en la base de datos
 Base.metadata.create_all(bind=engine)
 
-# Rutas de la API
-
-@app.post("/upload_video")
-async def upload_video(video: UploadFile = File(...)):
+# Rutas de la API    
+@app.post("/upload_file")
+async def upload_file(thumbnail: UploadFile = File(...), video: UploadFile = File(...)):
     # Carpeta donde se almacenarán los archivos subidos
     UPLOAD_FOLDER = './files'
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-    # Definir la ubicación del archivo de video
+    # Definir la ubicación de los archivos
+    thumbnail_location = os.path.join(UPLOAD_FOLDER, thumbnail.filename)
     video_location = os.path.join(UPLOAD_FOLDER, video.filename)
     
     try:
-        # Guardar el archivo de video
+        # Guardar el archivo thumbnail
+        with open(thumbnail_location, "wb") as f:
+            shutil.copyfileobj(thumbnail.file, f)
+
+        # Guardar el archivo video
         with open(video_location, "wb") as f:
             shutil.copyfileobj(video.file, f)
         
-        # Devolver una respuesta exitosa con la información del video
+        # Devolver una respuesta exitosa con la información de los archivos
         return JSONResponse(
             content={
                 "status": "success",
+                "thumbnail_path": thumbnail_location,
                 "video_path": video_location
-            },
-            status_code=200
-        )
-    except Exception as e:
-        # Manejar cualquier error que ocurra durante la subida de archivos
-        return JSONResponse(
-            content={"status": "error", "detail": str(e)},
-            status_code=500
-        )
-    
-@app.post("/upload_file")
-async def upload_file(file: UploadFile = File(...)):
-    # Carpeta donde se almacenarán los archivos subidos
-    UPLOAD_FOLDER = './files'
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-    # Definir la ubicación del archivo
-    file_location = os.path.join(UPLOAD_FOLDER, file.filename)
-    
-    try:
-        # Guardar el archivo
-        with open(file_location, "wb") as f:
-            shutil.copyfileobj(file.file, f)
-        
-        # Devolver una respuesta exitosa con la información del archivo
-        return JSONResponse(
-            content={
-                "status": "success",
-                "file_path": file_location
             },
             status_code=200
         )
