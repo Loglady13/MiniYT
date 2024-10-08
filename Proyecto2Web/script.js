@@ -1,3 +1,7 @@
+document.addEventListener('DOMContentLoaded', (event) => {
+    searchTopVideos(); // Llama a la función cuando el contenido del DOM esté completamente cargado
+});
+
 async function validateVideo(event) {
     event.preventDefault();  // Evita que el formulario recargue la página
 
@@ -57,7 +61,7 @@ async function validateVideo(event) {
 
     try {
         // Subir video y thumbnail
-        await saveFile(thumbnail, video);
+        await saveFile(thumbnail, video, title, description);
 
         // Oculta el indicador de carga y muestra éxito
         document.getElementById('loadingIndicator').style.display = 'none';
@@ -69,10 +73,12 @@ async function validateVideo(event) {
     }
 }
 
-async function saveFile(thumbnail, video) {
+async function saveFile(thumbnail, video, title, description) {
     const formData = new FormData();
     formData.append('thumbnail', thumbnail);
     formData.append('video', video);
+    formData.append('title', title);
+    formData.append('description', description);
 
     const response = await fetch('http://127.0.0.1:8000/upload_file', {
         method: 'POST',
@@ -88,4 +94,55 @@ function showError(message) {
     const errorMessageDiv = document.getElementById('errorMessage');
     errorMessageDiv.innerHTML = message;
     errorMessageDiv.style.display = 'block';
+}
+
+async function searchTopVideos() {
+    try {
+        // Realizar la solicitud GET al endpoint de los 10 videos más vistos
+        const response = await fetch('http://127.0.0.1:8000/videos/top10');
+        
+        // Verificar si la solicitud fue exitosa
+        if (!response.ok) {
+            throw new Error('Error al obtener los videos más vistos');
+        }
+
+        // Parsear la respuesta a formato JSON
+        const topVideos = await response.json();
+
+        // Llamar a la función que muestra los videos en el HTML
+        displayTopVideos(topVideos);
+        
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+// Función para mostrar los videos en el HTML
+function displayTopVideos(videos) {
+    const videoContainer = document.getElementById('videoContainer');
+
+    // Limpiar el contenedor por si ya tiene contenido
+    videoContainer.innerHTML = '';
+
+    // Iterar sobre la lista de videos y crear elementos HTML para mostrarlos
+    videos.forEach(video => {
+        const videoElement = document.createElement('div');
+        videoElement.className = 'video-item col-md-3'; // Usar columnas de Bootstrap para el diseño
+
+        // Crear elementos HTML para cada campo del video
+        videoElement.innerHTML = `
+            <div class="card mb-4">
+                <img src="backend/${video.thumbnail}" class="card-img-top" alt="Thumbnail">
+                <div class="card-body">
+                    <h5 class="card-title">${video.title}</h5>
+                    <p class="card-text"><strong>Fecha de creación:</strong> ${new Date(video.creationDate).toLocaleDateString()}</p>
+                    <p class="card-text"><strong>Descripción:</strong> ${video.description}</p>
+                    <p class="card-text"><strong>Vistas:</strong> ${video.viewsCount}</p>
+                </div>
+            </div>
+        `;
+
+        // Añadir el video al contenedor
+        videoContainer.appendChild(videoElement);
+    });
 }

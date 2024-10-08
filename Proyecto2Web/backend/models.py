@@ -1,6 +1,8 @@
 from sqlalchemy import Column, Integer, String, Date, ForeignKey
-from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from pydantic import BaseModel
+from datetime import date
+
 
 Base = declarative_base()
 
@@ -31,3 +33,17 @@ class Comments(Base):
     videoID = Column(Integer, ForeignKey('videos.id'))
     comment = Column(String, nullable=False)
     creationDate = Column(Date, nullable=False)
+
+    # Esquema Pydantic para las respuestas de Video
+class VideoResponse(BaseModel):
+    id: int
+    title: str
+    creationDate: date
+    description: str
+    videoPath: str
+    thumbnail: str
+    viewsCount: int
+
+    class Config:
+        orm_mode = True  # Habilita el modo ORM para convertir automáticamente objetos SQLAlchemy a Pydantic
+
