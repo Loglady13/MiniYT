@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     searchTopVideos(); // Llama a la función cuando el contenido del DOM esté completamente cargado
-    document.getElementById('searchForm').addEventListener('submit', searchVideos);
+
 });
 
 async function validateVideo(event) {
@@ -133,13 +133,15 @@ function displayTopVideos(videos) {
         // Crear elementos HTML para cada campo del video
         videoElement.innerHTML = `
             <div class="card mb-4">
-                <img src="backend/${video.thumbnail}" class="card-img-top" alt="Thumbnail">
-                <div class="card-body">
-                    <h5 class="card-title">${video.title}</h5>
-                    <p class="card-text"><strong>Fecha de creación:</strong> ${new Date(video.creationDate).toLocaleDateString()}</p>
-                    <p class="card-text"><strong>Descripción:</strong> ${video.description}</p>
-                    <p class="card-text"><strong>Vistas:</strong> ${video.viewsCount}</p>
-                </div>
+                <a href="seeVideo.html?id=${video.id}">
+                    <img src="backend/${video.thumbnail}" class="card-img-top" alt="Thumbnail">
+                    <div class="card-body">
+                        <h5 class="card-title">${video.title}</h5>
+                        <p class="card-text"><strong>Fecha de creación:</strong> ${new Date(video.creationDate).toLocaleDateString()}</p>
+                        <p class="card-text"><strong>Descripción:</strong> ${video.description}</p>
+                        <p class="card-text"><strong>Vistas:</strong> ${video.viewsCount}</p>
+                    </div>
+                </a>
             </div>
         `;
 
@@ -204,4 +206,26 @@ function showResults(videos) {
         `;
         videoContainer.appendChild(videoElement);
     });
+}
+
+async function searchVideosId() {
+    const params = new URLSearchParams(window.location.search);
+    const title = params.get('id');  // Obtener el parámetro 'title' de la URL
+
+    if (title) {
+        try {
+            // Realizar la solicitud a la API con el título de búsqueda
+            const response = await fetch(`http://127.0.0.1:8000/videos/?title=${encodeURIComponent(title)}`);
+            
+            if (!response.ok) {
+                throw new Error('Error al obtener los videos');
+            }
+
+            const videos = await response.json();  // Obtener los videos en formato JSON
+            showResults(videos);  // Mostrar los resultados en la página
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('videoContainer').innerHTML = '<p>Ocurrió un error al buscar los videos.</p>';
+        }
+    }
 }

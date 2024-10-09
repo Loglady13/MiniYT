@@ -93,6 +93,8 @@ def get_videos(title: str = None, db: Session = Depends(get_db)):
     
     videos = query.all()  # Ejecuta la consulta y obtiene todos los resultados
     return videos
+    
+
 
 # Endpoint para obtener los 10 videos más vistos
 @app.get("/videos/top10")
@@ -127,4 +129,10 @@ def saveVideoDatabase(db: Session, title: str, description: str, pathThumbnail: 
         db.rollback()  # Revertir la transacción en caso de error
         print(f"Error al insertar el video: {str(e)}")
         return False  # Devolver False si hubo un error
+    
+
+@app.get("/videosId/{id}", response_model=VideoResponse)
+def get_video_by_id(id: int, db: Session = Depends(get_db)):
+    video = db.query(Video).filter(Video.id == id).first()    
+    return video
 
