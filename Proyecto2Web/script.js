@@ -229,3 +229,31 @@ async function searchVideosId() {
         }
     }
 }
+
+// Función para agregar el video a favoritos
+async function addToFavorites() {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/favorites/${videoId}`, {
+            method: 'PUT', // Usamos PUT para actualizar o agregar
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                videoId: videoId, // Puedes enviar el ID del video
+                // Añade otros datos si es necesario, como el usuario, etc.
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al agregar el video a favoritos');
+        }
+
+        const result = await response.json(); // Obtener la respuesta del servidor
+        alert('Video agregado a favoritos exitosamente');
+        console.log(result); // Verificar la respuesta del servidor
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al agregar el video a favoritos');
+    }
+}

@@ -10,7 +10,7 @@
 <body>
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container-fluid">
-          <a class="navbar-brand" href="#">Mini<span style="color: red;">Youtube</span></a>
+          <a class="navbar-brand" href="index.html">Mini<span style="color: red;">Youtube</span></a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
@@ -30,20 +30,26 @@
         </div>
     </nav>
 
-    
     <div class="container mt-5">
         <h1 id="videoTitle">Cargando título...</h1>
-        <video id="videoPlayer" width="100%" controls>
+        <video id="videoPlayer" width="100%" controls autoplay>
             <!-- Aquí se mostrará el video -->
         </video>
-        <p id="videoDescription">Cargando descripción...</p>
-        <p id="videoViews">Cargando vistas...</p>
+        <div style="display:flex; flex:row;">
+            <div>
+                <p id="videoDescription">Cargando descripción...</p>
+                <p id="videoViews">Cargando vistas...</p>
+                <p id="dateCreation"></p>
+            </div>
+            <button id="addToFavorites" type="button" class="btn btn-success" onclick="toggleFavorite()">+ Agregar a favoritos</button>
+        </div>
     </div>
 
     <script>
         // Obtener el ID del video desde la URL
         const params = new URLSearchParams(window.location.search);
         const videoId = params.get('id');
+        let isFavorite = false; // Variable para rastrear el estado del favorito
 
         // Función para obtener la información del video desde el servidor
         async function fetchVideoDetails() {
@@ -60,9 +66,47 @@
                 document.getElementById('videoPlayer').src = `backend/${video.videoPath.replace("\\", "/")}`;
                 document.getElementById('videoDescription').textContent = `Descripción: ${video.description}`;
                 document.getElementById('videoViews').textContent = `Vistas: ${video.viewsCount}`;
+                document.getElementById('dateCreation').textContent = `Fecha de creación: ${new Date(video.creationDate).toLocaleDateString()}`;
+                
+                // Verificar si el video ya está en favoritos
+                await checkIfFavorite();
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('videoTitle').textContent = 'Error al cargar el video';
+            }
+        }
+
+        // Función para verificar si el video está en favoritos
+        async function checkIfFavorite() {
+            const response = await fetch(`http://127.0.0.1:8000/favorites/${videoId}`);
+            if (response.ok) {
+                isFavorite = true; // El video está en favoritos
+                document.getElementById('addToFavorites').textContent = '- Quitar de favoritos';
+                document.getElementById('addToFavorites').classList.remove('btn-success');
+                document.getElementById('addToFavorites').classList.add('btn-danger');
+            }
+        }
+
+        // Función para alternar entre agregar y quitar de favoritos
+        async function toggleFavorite() {
+            const method = isFavorite ? 'DELETE' : 'PUT';
+            const response = await fetch(`http://127.0.0.1:8000/favorites/${videoId}`, { method });
+
+            if (response.ok) {
+                if (isFavorite) {
+                    isFavorite = false;
+                    document.getElementById('addToFavorites').textContent = '+ Agregar a favoritos';
+                    document.getElementById('addToFavorites').classList.remove('btn-danger');
+                    document.getElementById('addToFavorites').classList.add('btn-success');
+                } else {
+                    isFavorite = true;
+                    document.getElementById('addToFavorites').textContent = '- Quitar de favoritos';
+                    document.getElementById('addToFavorites').classList.remove('btn-success');
+                    document.getElementById('addToFavorites').classList.add('btn-danger');
+                }
+            } else {
+                const errorMessage = await response.json();
+                console.error('Error:', errorMessage.detail);
             }
         }
 

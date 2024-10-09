@@ -136,3 +136,29 @@ def get_video_by_id(id: int, db: Session = Depends(get_db)):
     video = db.query(Video).filter(Video.id == id).first()    
     return video
 
+
+@app.put("/favorites/{video_id}")
+async def add_to_favorites(video_id: int, db: Session = Depends(get_db)):
+    # Crea una nueva instancia de FavoriteVideos
+    favorite_video = FavoriteVideos(videoID=video_id, favoriteDate=date.today())
+
+    # Añade el nuevo favorito a la sesión
+    db.add(favorite_video)
+    db.commit()
+    db.refresh(favorite_video)  # Para obtener el objeto actualizado con su ID
+
+    return {"message": "Video agregado a favoritos", "favorite_id": favorite_video.id}
+
+@app.delete("/favorites/{video_id}", response_model=dict)
+def delete_favorite_video(video_id: int, db: Session = Depends(get_db)):
+    # Busca el video en la tabla de favoritos
+    favorite_video = db.query(FavoriteVideos).filter(FavoriteVideos.videoID == video_id).first()
+    
+    if not favorite_video:
+        raise HTTPException(status_code=404, detail="Video no encontrado en favoritos")
+    
+    # Elimina el video de los favoritos
+    db.delete(favorite_video)
+    db.commit()
+    
+    return {"detail": "Video eliminado de favoritos"}
