@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     searchTopVideos(); // Llama a la función cuando el contenido del DOM esté completamente cargado
+    document.getElementById('searchForm').addEventListener('submit', searchVideos);
 });
 
 async function validateVideo(event) {
@@ -143,6 +144,64 @@ function displayTopVideos(videos) {
         `;
 
         // Añadir el video al contenedor
+        videoContainer.appendChild(videoElement);
+    });
+}
+
+// Función para manejar la búsqueda en el formulario
+function handleSearch(event) {
+    event.preventDefault();  // Evita que el formulario recargue la página
+    const searchTerm = document.getElementById('searchInput').value;
+
+    // Redirigir a videoResult.html con el término de búsqueda como parámetro de consulta
+    window.location.href = `videoResult.html?title=${encodeURIComponent(searchTerm)}`;
+}
+
+// Función para buscar videos por título
+async function searchVideosTitle() {
+    const params = new URLSearchParams(window.location.search);
+    const title = params.get('title');  // Obtener el parámetro 'title' de la URL
+
+    if (title) {
+        try {
+            // Realizar la solicitud a la API con el título de búsqueda
+            const response = await fetch(`http://127.0.0.1:8000/videos/?title=${encodeURIComponent(title)}`);
+            
+            if (!response.ok) {
+                throw new Error('Error al obtener los videos');
+            }
+
+            const videos = await response.json();  // Obtener los videos en formato JSON
+            showResults(videos);  // Mostrar los resultados en la página
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('videoContainer').innerHTML = '<p>Ocurrió un error al buscar los videos.</p>';
+        }
+    }
+}
+
+// Función para mostrar los resultados de los videos en la página
+function showResults(videos) {
+    const videoContainer = document.getElementById('videoContainer');
+    videoContainer.innerHTML = '';  // Limpiar el contenedor de videos
+
+    if (videos.length === 0) {
+        videoContainer.innerHTML = '<p>No se encontraron resultados.</p>';
+        return;
+    }
+
+    videos.forEach(video => {
+        const videoElement = document.createElement('div');
+        videoElement.classList.add('col-md-4', 'mb-4');
+        videoElement.innerHTML = `
+            <div class="card">
+                <img class="card-img-top" src="backend/${video.thumbnail.replace("\\", "/")}"></img>
+                <div class="card-body">
+                    <h5 class="card-title">${video.title}</h5>
+                    <p class="card-text">${video.description || 'No hay descripción'}</p>
+                </div>
+            </div>
+        `;
         videoContainer.appendChild(videoElement);
     });
 }

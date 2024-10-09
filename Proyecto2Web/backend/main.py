@@ -48,8 +48,8 @@ async def upload_file(
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
     # Definir la ubicación de los archivos
-    thumbnail_location = os.path.join('backend/files', thumbnail.filename)
-    video_location = os.path.join('backend/files', video.filename)
+    thumbnail_location = os.path.join(UPLOAD_FOLDER, thumbnail.filename)
+    video_location = os.path.join(UPLOAD_FOLDER, video.filename)
 
     try:
         # Guardar el archivo thumbnail
