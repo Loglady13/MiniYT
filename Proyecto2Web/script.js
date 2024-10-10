@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     searchTopVideos(); // Llama a la función cuando el contenido del DOM esté completamente cargado
-
+    fetchComments();
 });
 
 async function validateVideo(event) {
@@ -160,14 +160,16 @@ function handleSearch(event) {
 }
 
 // Función para buscar videos por título
+
 async function searchVideosTitle() {
     const params = new URLSearchParams(window.location.search);
     const title = params.get('title');  // Obtener el parámetro 'title' de la URL
 
-    if (title) {
+    // Validar que el título exista y no sea una cadena vacía o solo espacios en blanco
+    if (title && title.trim().length > 0) {
         try {
             // Realizar la solicitud a la API con el título de búsqueda
-            const response = await fetch(`http://127.0.0.1:8000/videos/?title=${encodeURIComponent(title)}`);
+            const response = await fetch(`http://127.0.0.1:8000/videos/?title=${encodeURIComponent(title.trim())}`);
             
             if (!response.ok) {
                 throw new Error('Error al obtener los videos');
@@ -179,8 +181,13 @@ async function searchVideosTitle() {
             console.error('Error:', error);
             document.getElementById('videoContainer').innerHTML = '<p>Ocurrió un error al buscar los videos.</p>';
         }
+    } else {
+        // Si el título no es válido, mostrar un mensaje al usuario
+        document.getElementById('videoContainer').innerHTML = '<p>Por favor, ingrese un título válido para buscar videos.</p>';
     }
-}
+}    
+
+
 
 // Función para mostrar los resultados de los videos en la página
 function showResults(videos) {
@@ -197,11 +204,13 @@ function showResults(videos) {
         videoElement.classList.add('col-md-4', 'mb-4');
         videoElement.innerHTML = `
             <div class="card">
-                <img class="card-img-top" src="backend/${video.thumbnail.replace("\\", "/")}"></img>
-                <div class="card-body">
-                    <h5 class="card-title">${video.title}</h5>
-                    <p class="card-text">${video.description || 'No hay descripción'}</p>
-                </div>
+                <a href="seeVideo.html?id=${video.id}" >
+                    <img class="card-img-top" src="backend/${video.thumbnail.replace("\\", "/")}"></img>
+                    <div class="card-body">
+                        <h5 class="card-title">${video.title}</h5>
+                        <p class="card-text">${video.description || 'No hay descripción'}</p>
+                    </div>
+                </a>
             </div>
         `;
         videoContainer.appendChild(videoElement);
@@ -255,5 +264,73 @@ async function addToFavorites() {
     } catch (error) {
         console.error('Error:', error);
         alert('Error al agregar el video a favoritos');
+    }
+}
+
+async function addComment(event) {
+    event.preventDefault(); // Evitar que el formulario se envíe y recargue la página
+
+    const params = new URLSearchParams(window.location.search);
+    const videoId = params.get('id'); // Obtener el parámetro 'id' de la URL
+    const commentText = document.getElementById('commentInput').value; // Obtener el valor del comentario
+
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/addComment/${videoId}`, {
+            method: 'POST', // Usamos POST para agregar un nuevo comentario
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                videoId: videoId, // Enviar el ID del video
+                comment: commentText // Enviar el texto del comentario
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al agregar el comentario');
+        }
+
+        const result = await response.json(); // Obtener la respuesta del servidor
+        console.log(result); // Verificar la respuesta del servidor
+
+        // Limpiar el campo de entrada y mostrar el nuevo comentario en la lista
+        document.getElementById('commentInput').value = '';
+        const commentsList = document.getElementById('comments-list');
+        const newCommentItem = document.createElement('li');
+        newCommentItem.textContent = commentText; // Mostrar el comentario recién agregado
+        commentsList.appendChild(newCommentItem);
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al agregar el comentario');
+    }
+}
+
+async function fetchComments() {
+    const params = new URLSearchParams(window.location.search);
+    const videoId = params.get('id');  // Obtener el parámetro 'id' de la URL
+
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/comments/${videoId}`);
+        if (!response.ok) {
+            throw new Error('Error al obtener los comentarios');
+        }
+
+        const comments = await response.json(); // Obtener los comentarios
+        const commentsList = document.getElementById('comments-list');
+        commentsList.innerHTML = ''; // Limpiar la lista antes de añadir nuevos comentarios
+
+        comments.forEach(comment => {
+            const listItem = document.createElement('li');
+            
+            // Crear un texto con la fecha de creación y el comentario
+            listItem.innerHTML = `<strong>${new Date(comment.creationDate).toLocaleDateString()}</strong>: ${comment.comment}`;
+        
+            // Añadir el comentario a la lista
+            commentsList.appendChild(listItem);
+        });mentsList.appendChild(listItem);
+        
+    } catch (error) {
+        console.error('Error:', error);
     }
 }

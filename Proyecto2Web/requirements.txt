@@ -12,3 +12,8 @@ y password por la contraseña cuando uno entra a postgres, donde dice prueba, va
 
 //cd backend Instalar:
     - pip install python-multipart
+
+pip install fastapi
+pip install "uvicorn[standard]"
+pip install fastapi-cors
+

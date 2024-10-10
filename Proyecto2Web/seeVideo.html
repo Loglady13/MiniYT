@@ -31,19 +31,36 @@
     </nav>
 
     <div class="container mt-5">
-        <h1 id="videoTitle">Cargando título...</h1>
         <video id="videoPlayer" width="100%" controls autoplay>
             <!-- Aquí se mostrará el video -->
         </video>
+        <h1 id="videoTitle">Cargando título...</h1>
         <div style="display:flex; flex:row;">
             <div>
                 <p id="videoDescription">Cargando descripción...</p>
-                <p id="videoViews">Cargando vistas...</p>
                 <p id="dateCreation"></p>
+                <p id="videoViews">Cargando vistas...</p>
             </div>
             <button id="addToFavorites" type="button" class="btn btn-success" onclick="toggleFavorite()">+ Agregar a favoritos</button>
         </div>
     </div>
+
+
+    <div id="comments-Conteiner">
+        <h3>Comentarios</h3>
+    
+        <div id="add-Comment">
+            <form action="" onsubmit="addComment(event)">
+                <input type="text" id="commentInput" required>
+                <button type="submit">Subir comentario</button>
+            </form>
+        </div>
+    
+        <ul id="comments-list">
+            <!-- Aquí se mostrarán los comentarios -->
+        </ul>
+    </div>
+    
 
     <script>
         // Obtener el ID del video desde la URL
@@ -62,11 +79,11 @@
                 const video = await response.json(); // Obtener los detalles del video
 
                 // Mostrar los detalles en la página
-                document.getElementById('videoTitle').textContent = video.title;
                 document.getElementById('videoPlayer').src = `backend/${video.videoPath.replace("\\", "/")}`;
+                document.getElementById('videoTitle').textContent = video.title;
                 document.getElementById('videoDescription').textContent = `Descripción: ${video.description}`;
-                document.getElementById('videoViews').textContent = `Vistas: ${video.viewsCount}`;
                 document.getElementById('dateCreation').textContent = `Fecha de creación: ${new Date(video.creationDate).toLocaleDateString()}`;
+                document.getElementById('videoViews').textContent = `Vistas: ${video.viewsCount}`;
                 
                 // Verificar si el video ya está en favoritos
                 await checkIfFavorite();

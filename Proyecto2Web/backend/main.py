@@ -11,7 +11,7 @@ import os
 import shutil
 from datetime import date
 from typing import List
-from models import VideoResponse
+from models import VideoResponse, CommentCreate, CommentResponse
 
 # Crear la aplicación FastAPI
 app = FastAPI()
@@ -162,3 +162,29 @@ def delete_favorite_video(video_id: int, db: Session = Depends(get_db)):
     db.commit()
     
     return {"detail": "Video eliminado de favoritos"}
+
+@app.post("/addComment/{video_id}")
+async def add_comment(video_id: int, comment: CommentCreate, db: Session = Depends(get_db)):
+    # Crea una nueva instancia de Comments
+    new_comment = Comments(
+        videoID=video_id,
+        comment=comment.comment,
+        creationDate=date.today()  # O la fecha actual si es necesario
+    )
+
+    # Añade el nuevo comentario a la sesión
+    db.add(new_comment)
+    db.commit()
+    db.refresh(new_comment)  # Para obtener el objeto actualizado con su ID
+
+    return {"message": "Comentario agregado exitosamente", "comment_id": new_comment.id}
+
+@app.get("/comments/{video_id}", response_model=List[CommentResponse])
+def get_comments(video_id: int, db: Session = Depends(get_db)):
+    # Consulta para obtener los comentarios del video
+    comments = db.query(Comments).filter(Comments.videoID == video_id).all()
+    
+    if not comments:
+        raise HTTPException(status_code=404, detail="No hay comentarios para este video")
+    
+    return comments

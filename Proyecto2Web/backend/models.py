@@ -47,3 +47,15 @@ class VideoResponse(BaseModel):
     class Config:
         orm_mode = True  # Habilita el modo ORM para convertir automáticamente objetos SQLAlchemy a Pydantic
 
+class CommentCreate(BaseModel):
+    videoId: int
+    comment: str
+
+class CommentResponse(BaseModel):
+    id: int
+    videoID: int
+    comment: str
+    creationDate: date
+
+    class Config:
+        orm_mode = True 
