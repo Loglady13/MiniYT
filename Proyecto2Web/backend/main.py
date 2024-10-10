@@ -188,3 +188,20 @@ def get_comments(video_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No hay comentarios para este video")
     
     return comments
+
+@app.put("/videos/{video_id}/increment_views")
+async def increment_views(video_id: int, db: Session = Depends(get_db)):
+    # Buscar el video por su ID
+    video = db.query(Video).filter(Video.id == video_id).first()
+
+    # Si no se encuentra el video, lanzar una excepción
+    if not video:
+        raise HTTPException(status_code=404, detail="Video no encontrado")
+
+    # Incrementar el contador de vistas
+    video.viewsCount += 1
+
+    # Guardar los cambios en la base de datos
+    db.commit()
+
+    return {"message": "Reproducción incrementada", "viewsCount": video.viewsCount}

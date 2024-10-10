@@ -273,7 +273,7 @@ async function addComment(event) {
     const params = new URLSearchParams(window.location.search);
     const videoId = params.get('id'); // Obtener el parámetro 'id' de la URL
     const commentText = document.getElementById('commentInput').value; // Obtener el valor del comentario
-
+    
     try {
         const response = await fetch(`http://127.0.0.1:8000/addComment/${videoId}`, {
             method: 'POST', // Usamos POST para agregar un nuevo comentario
@@ -332,5 +332,27 @@ async function fetchComments() {
         
     } catch (error) {
         console.error('Error:', error);
+    }
+}
+
+async function incrementVideoViews(videoId) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/videos/${videoId}/increment_views`, {
+            method: 'PUT',  // Utilizamos el método PUT
+            headers: {
+                'Content-Type': 'application/json'  // Aseguramos que sea de tipo JSON
+            }
+        });
+
+        // Verificamos si la solicitud fue exitosa
+        if (!response.ok) {
+            throw new Error('Error al incrementar las reproducciones');
+        }
+
+        const result = await response.json();  // Obtenemos la respuesta como JSON
+        console.log(result);  // Imprimimos el resultado en la consola para verificarlo
+
+    } catch (error) {
+        console.error('Error:', error);  // En caso de error, lo mostramos en la consola
     }
 }
