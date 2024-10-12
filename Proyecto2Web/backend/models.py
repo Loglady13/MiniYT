@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Date, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from pydantic import BaseModel
 from datetime import date
+from sqlalchemy.orm import relationship
 
 
 Base = declarative_base()
@@ -45,7 +46,7 @@ class VideoResponse(BaseModel):
     viewsCount: int
 
     class Config:
-        orm_mode = True  # Habilita el modo ORM para convertir automáticamente objetos SQLAlchemy a Pydantic
+        from_attributes = True  # Habilita el modo ORM para convertir automáticamente objetos SQLAlchemy a Pydantic
 
 class CommentCreate(BaseModel):
     videoId: int
@@ -58,4 +59,4 @@ class CommentResponse(BaseModel):
     creationDate: date
 
     class Config:
-        orm_mode = True 
+        from_attributes = True 

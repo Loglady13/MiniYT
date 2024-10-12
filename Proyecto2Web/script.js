@@ -1,11 +1,23 @@
 document.addEventListener('DOMContentLoaded', (event) => {
+    // Comprueba si el estado de éxito está en localStorage
+    const uploadSuccess = localStorage.getItem('uploadSuccess');
     searchTopVideos(); // Llama a la función cuando el contenido del DOM esté completamente cargado
+    searchTop10Favorites();
     fetchComments();
+    if (uploadSuccess === 'true') {
+        document.getElementById('successMessage').style.display = 'block';
+    }
+    
 });
+
+async function deleteSuccess(event){
+    localStorage.setItem('uploadSuccess', 'false');
+    document.getElementById('successMessage').style.display = 'none';
+}
 
 async function validateVideo(event) {
     event.preventDefault();  // Evita que el formulario recargue la página
-
+    localStorage.setItem('uploadSuccess', 'false');
     // Oculta los mensajes anteriores
     document.getElementById('errorMessage').style.display = 'none';
     document.getElementById('successMessage').style.display = 'none';
@@ -16,65 +28,81 @@ async function validateVideo(event) {
 
     if (!video || video.type !== 'video/mp4') {
         showError('Por favor selecciona un archivo .mp4 para el video');
-        return false;
+        return;
     }
 
     const videoSizeInMB = video.size / (1024 * 1024); // Max 10 MB
     if (videoSizeInMB > 10) {
         showError('El archivo de video no debe exceder los 10 MB');
-        return false;
+        return;
     }
 
     const title = document.getElementById('titleNewVideo').value;
     if (!title) {
         showError('El título no puede estar vacío');
-        return false;
+        return;
     }
 
     const description = document.getElementById('description').value;
     if (description.length > 300) {
         showError('La descripción no debe superar los 300 caracteres');
-        return false;
+        return;
     }
 
     const thumbnailInput = document.getElementById('newThumbnail');
     const thumbnail = thumbnailInput.files[0];
-    if(!thumbnail){
+    if (!thumbnail) {
         showError('Por favor selecciona un archivo para el thumbnail');
-        return false;
+        return;
     }
 
     const maxSizeInBytes = 2 * 1024 * 1024;  // 2 MB en bytes
 
     if (thumbnail.type === 'image/jpg' || thumbnail.type === 'image/jpeg') {
-        // Verificar tamaño solo si es imagen .jpg
         if (thumbnail.size > maxSizeInBytes) {
-            console.error("El archivo de imagen debe pesar menos de 2MB");
-            return false;
+            showError("El archivo de imagen debe pesar menos de 2MB");
+            return;
         }
     } else if (thumbnail.type !== 'video/mp4') {
         showError("Solo se aceptan archivos .jpg o .mp4");
-        return false;
+        return;
     }
 
-    // Muestra el indicador de carga
-    document.getElementById('loadingIndicator').style.display = 'block';
+    
+    
+
+    let success = false;
 
     try {
+        
         // Subir video y thumbnail
         await saveFile(thumbnail, video, title, description);
+        
+        success = true;  // Indica que la subida fue exitosa
 
-        // Oculta el indicador de carga y muestra éxito
-        document.getElementById('loadingIndicator').style.display = 'none';
-        document.getElementById('successMessage').style.display = 'block';
-
+        // Guarda el estado de éxito en localStorage
+        localStorage.setItem('uploadSuccess', 'true');
     } catch (error) {
         showError('Error al subir el archivo. Por favor, inténtalo de nuevo.');
         document.getElementById('loadingIndicator').style.display = 'none';
+        return;
     }
+
+    // Muestra el mensaje de éxito si la subida fue exitosa
+    if (success) {
+        document.getElementById('successMessage').style.display = 'block';
+    }
+    
 }
 
+
 async function saveFile(thumbnail, video, title, description) {
+    // Mantener el indicador de carga visible por al menos 5 segundos
+    document.getElementById('loadingIndicator').style.display = 'block';
+    document.getElementById('loadingIndicator').style.display = 'block';
+    document.getElementById('loadingIndicator').style.display = 'block';
+   
+
     const formData = new FormData();
     formData.append('thumbnail', thumbnail);
     formData.append('video', video);
@@ -89,6 +117,8 @@ async function saveFile(thumbnail, video, title, description) {
     if (!response.ok) {
         throw new Error('Error al subir el archivo');
     }
+    
+
 }
 
 function showError(message) {
@@ -116,6 +146,54 @@ async function searchTopVideos() {
     } catch (error) {
         console.error('Error:', error);
     }
+}
+
+async function searchTop10Favorites(){
+    try{
+        const response = await fetch('http://127.0.0.1:8000/videos/top10/favorites');
+
+        // Verificar si la solicitud fue exitosa
+        if (!response.ok) {
+            throw new Error('Error al obtener los videos favoritos');
+        }
+
+        // Parsear la respuesta a formato JSON
+        const topFavorites = await response.json();
+
+        displayTopFavorites(topFavorites);
+    }
+    catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+function displayTopFavorites(videos){
+    const videoContainer = document.getElementById('videoFavorite');
+
+    videoContainer.innerHTML = '';
+
+    videos.forEach(video => {
+        const videoElement = document.createElement('div');
+        videoElement.className = 'video-item col-md-3'; // Usar columnas de Bootstrap para el diseño
+
+        // Crear elementos HTML para cada campo del video
+        videoElement.innerHTML = `
+            <div class="card mb-4">
+                <a href="seeVideo.html?id=${video.id}">
+                    <img src="backend/${video.thumbnail}" class="card-img-top" alt="Thumbnail">
+                    <div class="card-body">
+                        <h5 class="card-title">${video.title}</h5>
+                        <p class="card-text"><strong>Fecha de creación:</strong> ${new Date(video.creationDate).toLocaleDateString()}</p>
+                        <p class="card-text"><strong>Descripción:</strong> ${video.description}</p>
+                        <p class="card-text"><strong>Vistas:</strong> ${video.viewsCount}</p>
+                    </div>
+                </a>
+            </div>
+        `;
+
+        // Añadir el video al contenedor
+        videoContainer.appendChild(videoElement);
+    });
 }
 
 // Función para mostrar los videos en el HTML
@@ -159,9 +237,8 @@ function handleSearch(event) {
     window.location.href = `videoResult.html?title=${encodeURIComponent(searchTerm)}`;
 }
 
-// Función para buscar videos por título
 
-async function searchVideosTitle() {
+async function searchVideos() {
     const params = new URLSearchParams(window.location.search);
     const title = params.get('title');  // Obtener el parámetro 'title' de la URL
 
@@ -177,6 +254,7 @@ async function searchVideosTitle() {
 
             const videos = await response.json();  // Obtener los videos en formato JSON
             showResults(videos);  // Mostrar los resultados en la página
+            document.getElementById('searchInput').value = decodeURIComponent(title);
         } catch (error) {
             console.error('Error:', error);
             document.getElementById('videoContainer').innerHTML = '<p>Ocurrió un error al buscar los videos.</p>';
@@ -186,7 +264,6 @@ async function searchVideosTitle() {
         document.getElementById('videoContainer').innerHTML = '<p>Por favor, ingrese un título válido para buscar videos.</p>';
     }
 }    
-
 
 
 // Función para mostrar los resultados de los videos en la página
@@ -272,17 +349,26 @@ async function addComment(event) {
 
     const params = new URLSearchParams(window.location.search);
     const videoId = params.get('id'); // Obtener el parámetro 'id' de la URL
-    const commentText = document.getElementById('commentInput').value; // Obtener el valor del comentario
+    const commentText = document.getElementById('commentInput').value.trim(); // Obtener el valor del comentario y eliminar espacios innecesarios
+
+    // Validaciones del comentario
+    if (!commentText) {
+        showError('No puedes dejar comentarios vacíos');
+        return false;
+    } else if (commentText.length > 100) {
+        showError('El texto no puede ser mayor a 100 caracteres');
+        return false;
+    }
     
     try {
         const response = await fetch(`http://127.0.0.1:8000/addComment/${videoId}`, {
-            method: 'POST', // Usamos POST para agregar un nuevo comentario
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                videoId: videoId, // Enviar el ID del video
-                comment: commentText // Enviar el texto del comentario
+                videoId: videoId,
+                comment: commentText
             })
         });
 
@@ -290,19 +376,21 @@ async function addComment(event) {
             throw new Error('Error al agregar el comentario');
         }
 
-        const result = await response.json(); // Obtener la respuesta del servidor
-        console.log(result); // Verificar la respuesta del servidor
+        const result = await response.json();
+        console.log(result);
 
-        // Limpiar el campo de entrada y mostrar el nuevo comentario en la lista
+        // Limpiar el campo de entrada
         document.getElementById('commentInput').value = '';
+
+        // Agregar el comentario nuevo a la lista sin recargar todos los comentarios
         const commentsList = document.getElementById('comments-list');
         const newCommentItem = document.createElement('li');
-        newCommentItem.textContent = commentText; // Mostrar el comentario recién agregado
+        newCommentItem.innerHTML = `<strong>${new Date().toLocaleString()}</strong>: ${commentText}`;
         commentsList.appendChild(newCommentItem);
 
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al agregar el comentario');
+        alert('Error al agregar el comentario. Por favor, inténtalo de nuevo.');
     }
 }
 
@@ -316,24 +404,22 @@ async function fetchComments() {
             throw new Error('Error al obtener los comentarios');
         }
 
-        const comments = await response.json(); // Obtener los comentarios
+        const comments = await response.json();
         const commentsList = document.getElementById('comments-list');
         commentsList.innerHTML = ''; // Limpiar la lista antes de añadir nuevos comentarios
 
         comments.forEach(comment => {
             const listItem = document.createElement('li');
-            
             // Crear un texto con la fecha de creación y el comentario
-            listItem.innerHTML = `<strong>${new Date(comment.creationDate).toLocaleDateString()}</strong>: ${comment.comment}`;
-        
-            // Añadir el comentario a la lista
+            listItem.innerHTML = `<strong>${(comment.creationDate).toLocaleString()}</strong>: ${comment.comment}`;
             commentsList.appendChild(listItem);
-        });mentsList.appendChild(listItem);
-        
+        });
+
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error al obtener los comentarios:', error);
     }
 }
+
 
 async function incrementVideoViews(videoId) {
     try {

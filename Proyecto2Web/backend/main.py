@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi import Depends, File, UploadFile, Form
 from sqlalchemy.orm import sessionmaker
 from database import engine, get_db 
@@ -12,6 +12,9 @@ import shutil
 from datetime import date
 from typing import List
 from models import VideoResponse, CommentCreate, CommentResponse
+from sqlalchemy import or_
+from datetime import datetime
+
 
 # Crear la aplicación FastAPI
 app = FastAPI()
@@ -34,7 +37,6 @@ app.add_middleware(
 # Crear la tabla en la base de datos
 Base.metadata.create_all(bind=engine)
 
-# Rutas de la API    
 @app.post("/upload_file")
 async def upload_file(
     thumbnail: UploadFile = File(...), 
@@ -44,12 +46,16 @@ async def upload_file(
     db: Session = Depends(get_db)
 ):
     # Carpeta donde se almacenarán los archivos subidos
-    UPLOAD_FOLDER = './files'
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    UPLOAD_FOLDER_VIDEOS = './videos'
+    UPLOAD_FOLDER_THUMBNAILS = './thumbnails'
+    
+    # Crear las carpetas si no existen
+    os.makedirs(UPLOAD_FOLDER_VIDEOS, exist_ok=True)
+    os.makedirs(UPLOAD_FOLDER_THUMBNAILS, exist_ok=True)
 
     # Definir la ubicación de los archivos
-    thumbnail_location = os.path.join(UPLOAD_FOLDER, thumbnail.filename)
-    video_location = os.path.join(UPLOAD_FOLDER, video.filename)
+    thumbnail_location = os.path.join(UPLOAD_FOLDER_THUMBNAILS, thumbnail.filename)
+    video_location = os.path.join(UPLOAD_FOLDER_VIDEOS, video.filename)
 
     try:
         # Guardar el archivo thumbnail
@@ -83,18 +89,22 @@ async def upload_file(
             content={"status": "error", "detail": str(e)},
             status_code=500
         )
-    
+
 @app.get("/videos/", response_model=List[VideoResponse])
 def get_videos(title: str = None, db: Session = Depends(get_db)):
     query = db.query(Video)
 
     if title:
-        query = query.filter(Video.title.ilike(f"%{title}%"))  # Búsqueda insensible a mayúsculas
+        # Busca coincidencias en el título o en la descripción
+        query = query.filter(
+            or_(
+                Video.title.ilike(f"%{title}%"),  # Búsqueda insensible a mayúsculas en el título
+                Video.description.ilike(f"%{title}%")  # Búsqueda insensible a mayúsculas en la descripción
+            )
+        )
     
     videos = query.all()  # Ejecuta la consulta y obtiene todos los resultados
     return videos
-    
-
 
 # Endpoint para obtener los 10 videos más vistos
 @app.get("/videos/top10")
@@ -104,6 +114,25 @@ def get_top_videos(db: Session = Depends(get_db)):
     
     # Retornar los videos en el formato deseado
     return top_videos
+
+@app.get("/videos/top10/favorites")
+def get_top_favorite_videos(db: Session = Depends(get_db)):
+    # Obtener los 10 videos más recientes añadidos a favoritos en orden descendente
+    top_favorite_videos = (
+        db.query(FavoriteVideos)
+        .order_by(FavoriteVideos.favoriteDate.desc())
+        .limit(10)
+        .all()
+    )
+    
+    # Obtener los IDs de los videos favoritos
+    video_ids = [fav.videoID for fav in top_favorite_videos]
+    
+    # Obtener la información completa de los videos basados en los IDs
+    videos = db.query(Video).filter(Video.id.in_(video_ids)).all()
+    
+    # Retornar los videos en el formato deseado
+    return videos
 
 
 def saveVideoDatabase(db: Session, title: str, description: str, pathThumbnail: str, pathVideo: str):
@@ -149,6 +178,8 @@ async def add_to_favorites(video_id: int, db: Session = Depends(get_db)):
 
     return {"message": "Video agregado a favoritos", "favorite_id": favorite_video.id}
 
+
+
 @app.delete("/favorites/{video_id}", response_model=dict)
 def delete_favorite_video(video_id: int, db: Session = Depends(get_db)):
     # Busca el video en la tabla de favoritos
@@ -157,9 +188,13 @@ def delete_favorite_video(video_id: int, db: Session = Depends(get_db)):
     if not favorite_video:
         raise HTTPException(status_code=404, detail="Video no encontrado en favoritos")
     
-    # Elimina el video de los favoritos
-    db.delete(favorite_video)
-    db.commit()
+    try:
+        # Elimina el video de los favoritos
+        db.delete(favorite_video)
+        db.commit()
+    except Exception as e:
+        db.rollback()  # Deshacer cambios en caso de error
+        raise HTTPException(status_code=500, detail="Error al eliminar el video") from e
     
     return {"detail": "Video eliminado de favoritos"}
 
@@ -169,7 +204,7 @@ async def add_comment(video_id: int, comment: CommentCreate, db: Session = Depen
     new_comment = Comments(
         videoID=video_id,
         comment=comment.comment,
-        creationDate=date.today()  # O la fecha actual si es necesario
+        creationDate=datetime.now()  # O la fecha actual si es necesario
     )
 
     # Añade el nuevo comentario a la sesión
@@ -182,7 +217,7 @@ async def add_comment(video_id: int, comment: CommentCreate, db: Session = Depen
 @app.get("/comments/{video_id}", response_model=List[CommentResponse])
 def get_comments(video_id: int, db: Session = Depends(get_db)):
     # Consulta para obtener los comentarios del video
-    comments = db.query(Comments).filter(Comments.videoID == video_id).all()
+    comments = db.query(Comments).filter(Comments.videoID == video_id).order_by(Comments.creationDate.desc()).all()
     
     if not comments:
         raise HTTPException(status_code=404, detail="No hay comentarios para este video")

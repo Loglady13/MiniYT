@@ -18,7 +18,7 @@
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
               <li class="nav-item">
                 <button class="btn btn-primary">
-                  <a href="./createVideo.html">Agregar video</a>
+                  <a href="./createVideo.html" style="color: white; text-decoration: none;">Agregar video</a>
                 </button>
               </li>
             </ul>
@@ -35,28 +35,30 @@
             <!-- Aquí se mostrará el video -->
         </video>
         <h1 id="videoTitle">Cargando título...</h1>
-        <div style="display:flex; flex:row;">
+        <div>
             <div>
                 <p id="videoDescription">Cargando descripción...</p>
                 <p id="dateCreation"></p>
                 <p id="videoViews">Cargando vistas...</p>
             </div>
-            <button id="addToFavorites" type="button" class="btn btn-success" onclick="toggleFavorite()">+ Agregar a favoritos</button>
+            <button id="addToFavorites" type="button" class="btn btn-success" onclick="toggleFavorite()" style="padding: 5px;">+ Agregar a favoritos</button>
         </div>
     </div>
 
 
-    <div id="comments-Conteiner">
+    <div id="comments-Conteiner" class="container mt-4">
         <h3>Comentarios</h3>
     
-        <div id="add-Comment">
+        <div id="add-Comment" class="mb-3">
             <form action="" onsubmit="addComment(event)">
-                <input type="text" id="commentInput" required maxlength="100">
-                <button type="submit">Subir comentario</button>
+                <input type="text" id="commentInput" class="form-control" placeholder="Escribe tu comentario...">
+                <button type="submit" class="btn btn-primary" style="margin-top: 5px;">Subir comentario</button>
             </form>
         </div>
+
+        <div id="errorMessage" class="alert alert-danger mt-3" style="display:none;"></div>
     
-        <ul id="comments-list">
+        <ul id="comments-list" class="list-group" style="list-style: none;">
             <!-- Aquí se mostrarán los comentarios -->
         </ul>
     </div>
@@ -67,7 +69,7 @@
         const params = new URLSearchParams(window.location.search);
         const videoId = params.get('id');
         let isFavorite = false; // Variable para rastrear el estado del favorito
-
+        
         // Función para obtener la información del video desde el servidor
         async function fetchVideoDetails() {
             try {
@@ -75,65 +77,78 @@
                 if (!response.ok) {
                     throw new Error('Error al obtener los detalles del video');
                 }
-
+        
                 const video = await response.json(); // Obtener los detalles del video
-
-                incrementVideoViews(videoId)
+        
+                incrementVideoViews(videoId);
                 // Mostrar los detalles en la página
                 document.getElementById('videoPlayer').src = `backend/${video.videoPath.replace("\\", "/")}`;
                 document.getElementById('videoTitle').textContent = video.title;
                 document.getElementById('videoDescription').textContent = `Descripción: ${video.description}`;
                 document.getElementById('dateCreation').textContent = `Fecha de creación: ${new Date(video.creationDate).toLocaleDateString()}`;
                 document.getElementById('videoViews').textContent = `Vistas: ${video.viewsCount}`;
-                
-                // Verificar si el video ya está en favoritos
-                await checkIfFavorite();
+        
+                // Verificar si el video ya está en favoritos en localStorage
+                checkIfFavoriteLocalStorage();
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('videoTitle').textContent = 'Error al cargar el video';
             }
         }
-
-        // Función para verificar si el video está en favoritos
-        async function checkIfFavorite() {
-            const response = await fetch(`http://127.0.0.1:8000/favorites/${videoId}`);
-            if (response.ok) {
-                isFavorite = true; // El video está en favoritos
+        
+        // Función para verificar si el video está en favoritos en localStorage
+        function checkIfFavoriteLocalStorage() {
+            const favorites = JSON.parse(localStorage.getItem('favorites')) || {};
+            isFavorite = favorites[videoId] !== undefined; // Si el videoId existe en favoritos
+        
+            if (isFavorite) {
                 document.getElementById('addToFavorites').textContent = '- Quitar de favoritos';
                 document.getElementById('addToFavorites').classList.remove('btn-success');
                 document.getElementById('addToFavorites').classList.add('btn-danger');
             }
         }
-
+        
         // Función para alternar entre agregar y quitar de favoritos
         async function toggleFavorite() {
             const method = isFavorite ? 'DELETE' : 'PUT';
             const response = await fetch(`http://127.0.0.1:8000/favorites/${videoId}`, { method });
-
+        
             if (response.ok) {
+                const favorites = JSON.parse(localStorage.getItem('favorites')) || {};
+        
                 if (isFavorite) {
                     isFavorite = false;
                     document.getElementById('addToFavorites').textContent = '+ Agregar a favoritos';
                     document.getElementById('addToFavorites').classList.remove('btn-danger');
                     document.getElementById('addToFavorites').classList.add('btn-success');
+                    
+                    // Eliminar de localStorage
+                    delete favorites[videoId];
                 } else {
                     isFavorite = true;
                     document.getElementById('addToFavorites').textContent = '- Quitar de favoritos';
                     document.getElementById('addToFavorites').classList.remove('btn-success');
                     document.getElementById('addToFavorites').classList.add('btn-danger');
+        
+                    // Agregar a localStorage
+                    favorites[videoId] = new Date().toISOString();
                 }
+        
+                // Guardar en localStorage
+                localStorage.setItem('favorites', JSON.stringify(favorites));
             } else {
                 const errorMessage = await response.json();
                 console.error('Error:', errorMessage.detail);
             }
         }
-
+        
         // Llamar a la función para obtener los detalles del video
         if (videoId) {
             fetchVideoDetails();
         } else {
             document.getElementById('videoTitle').textContent = 'Video no encontrado';
         }
-    </script>
+        </script>
+        
 </body>
 </html>
