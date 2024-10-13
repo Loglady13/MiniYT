@@ -179,7 +179,7 @@ function displayTopFavorites(videos){
         // Crear elementos HTML para cada campo del video
         videoElement.innerHTML = `
             <div class="card mb-4">
-                <a href="seeVideo.html?id=${video.id}">
+                <a href="seeVideo.html?id=${video.id}" style="color: black; text-decoration: none;">
                     <img src="backend/${video.thumbnail}" class="card-img-top" alt="Thumbnail">
                     <div class="card-body">
                         <h5 class="card-title">${video.title}</h5>
@@ -211,7 +211,7 @@ function displayTopVideos(videos) {
         // Crear elementos HTML para cada campo del video
         videoElement.innerHTML = `
             <div class="card mb-4">
-                <a href="seeVideo.html?id=${video.id}">
+                <a href="seeVideo.html?id=${video.id}" style="color: black; text-decoration: none;">
                     <img src="backend/${video.thumbnail}" class="card-img-top" alt="Thumbnail">
                     <div class="card-body">
                         <h5 class="card-title">${video.title}</h5>
@@ -266,7 +266,6 @@ async function searchVideos() {
 }    
 
 
-// Función para mostrar los resultados de los videos en la página
 function showResults(videos) {
     const videoContainer = document.getElementById('videoContainer');
     videoContainer.innerHTML = '';  // Limpiar el contenedor de videos
@@ -278,10 +277,10 @@ function showResults(videos) {
 
     videos.forEach(video => {
         const videoElement = document.createElement('div');
-        videoElement.classList.add('col-md-4', 'mb-4');
+        videoElement.classList.add('col-md-4', 'mb-4', 'video-color');
         videoElement.innerHTML = `
             <div class="card">
-                <a href="seeVideo.html?id=${video.id}" >
+                <a href="seeVideo.html?id=${video.id}" style="color: black; text-decoration: none;">
                     <img class="card-img-top" src="backend/${video.thumbnail.replace("\\", "/")}"></img>
                     <div class="card-body">
                         <h5 class="card-title">${video.title}</h5>
@@ -293,7 +292,6 @@ function showResults(videos) {
         videoContainer.appendChild(videoElement);
     });
 }
-
 async function searchVideosId() {
     const params = new URLSearchParams(window.location.search);
     const title = params.get('id');  // Obtener el parámetro 'title' de la URL
