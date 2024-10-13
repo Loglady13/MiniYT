@@ -385,6 +385,7 @@ async function addComment(event) {
         // Agregar el comentario nuevo a la lista sin recargar todos los comentarios
         const commentsList = document.getElementById('comments-list');
         const newCommentItem = document.createElement('li');
+        newCommentItem.classList.add('comment-item');
         newCommentItem.innerHTML = `<strong>${new Date().toLocaleString()}</strong>: ${commentText}`;
         commentsList.appendChild(newCommentItem);
 
@@ -410,6 +411,7 @@ async function fetchComments() {
 
         comments.forEach(comment => {
             const listItem = document.createElement('li');
+            listItem.classList.add('comment-item');
             // Crear un texto con la fecha de creación y el comentario
             listItem.innerHTML = `<strong>${(comment.creationDate).toLocaleString()}</strong>: ${comment.comment}`;
             commentsList.appendChild(listItem);

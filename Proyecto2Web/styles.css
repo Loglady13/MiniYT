@@ -1,0 +1,22 @@
+/* Estilos para los comentarios */
+.comment-item {
+    background-color: #f9f9f9; /* Color de fondo para el comentario */
+    padding: 10px; /* Espaciado interno */
+    margin-bottom: 10px; /* Separación entre los comentarios */
+    border-radius: 8px; /* Bordes redondeados */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra para darle profundidad */
+    font-size: 14px; /* Tamaño de letra */
+    color: #333; /* Color del texto */
+    transition: background-color 0.3s ease; /* Transición suave para el fondo */
+}
+
+/* Cambia el color de fondo cuando el usuario pasa el ratón por encima */
+.comment-item:hover {
+    background-color: #e0e0e0;
+}
+
+/* Puedes personalizar el estilo del texto en negrita (fecha) si lo deseas */
+.comment-item strong {
+    color: #007bff; /* Color azul para la fecha */
+    font-weight: bold;
+}
