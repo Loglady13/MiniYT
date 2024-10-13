@@ -69,7 +69,7 @@
         // Obtener el ID del video desde la URL
         const params = new URLSearchParams(window.location.search);
         const videoId = params.get('id');
-        let isFavorite = false; // Variable para rastrear el estado del favorito
+        let isFavorite = false; // Variable para ver el estado del favorito
         
         // Función para obtener la información del video desde el servidor
         async function fetchVideoDetails() {

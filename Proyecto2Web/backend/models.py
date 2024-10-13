@@ -35,7 +35,7 @@ class Comments(Base):
     comment = Column(String, nullable=False)
     creationDate = Column(Date, nullable=False)
 
-    # Esquema Pydantic para las respuestas de Video
+    
 class VideoResponse(BaseModel):
     id: int
     title: str
@@ -46,7 +46,7 @@ class VideoResponse(BaseModel):
     viewsCount: int
 
     class Config:
-        from_attributes = True  # Habilita el modo ORM para convertir automáticamente objetos SQLAlchemy a Pydantic
+        from_attributes = True  
 
 class CommentCreate(BaseModel):
     videoId: int

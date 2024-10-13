@@ -2,7 +2,12 @@
 2. Ejecutar: python -m venv venv
 3. Activar: .\venv\Scripts\activate
 4. Instalar: pip install fastapi sqlalchemy psycopg2 uvicorn
+pip install fastapi
+pip install "uvicorn[standard]"
+pip install fastapi-cors
+pip install python-multipart
 5. Ejecutar: uvicorn main:app --reload
+6. Correr el index con live server
 
 
 Para que funcione:
@@ -10,10 +15,7 @@ En database.py:
 Cambiar en DATABASE_URL user por el nombre en postgres, por determinado casi siempre es postgres pero revisar
 y password por la contraseña cuando uno entra a postgres, donde dice prueba, va el nombre que le coloque a la tabla :)
 
-//cd backend Instalar:
-    - pip install python-multipart
 
-pip install fastapi
-pip install "uvicorn[standard]"
-pip install fastapi-cors
+
+
 

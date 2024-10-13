@@ -97,7 +97,7 @@ async function validateVideo(event) {
 
 
 async function saveFile(thumbnail, video, title, description) {
-    // Mantener el indicador de carga visible por al menos 5 segundos
+    
     document.getElementById('loadingIndicator').style.display = 'block';
     document.getElementById('loadingIndicator').style.display = 'block';
     document.getElementById('loadingIndicator').style.display = 'block';
@@ -157,7 +157,7 @@ async function searchTop10Favorites(){
             throw new Error('Error al obtener los videos favoritos');
         }
 
-        // Parsear la respuesta a formato JSON
+        // Pasar la respuesta a formato JSON
         const topFavorites = await response.json();
 
         displayTopFavorites(topFavorites);
@@ -174,9 +174,9 @@ function displayTopFavorites(videos){
 
     videos.forEach(video => {
         const videoElement = document.createElement('div');
-        videoElement.className = 'video-item col-md-3'; // Usar columnas de Bootstrap para el diseño
+        videoElement.className = 'video-item col-md-3'; 
 
-        // Crear elementos HTML para cada campo del video
+        // Se Crean elementos HTML para cada campo del video
         videoElement.innerHTML = `
             <div class="card mb-4">
                 <a href="seeVideo.html?id=${video.id}" style="color: black; text-decoration: none;">
@@ -206,7 +206,7 @@ function displayTopVideos(videos) {
     // Iterar sobre la lista de videos y crear elementos HTML para mostrarlos
     videos.forEach(video => {
         const videoElement = document.createElement('div');
-        videoElement.className = 'video-item col-md-3'; // Usar columnas de Bootstrap para el diseño
+        videoElement.className = 'video-item col-md-3'; 
 
         // Crear elementos HTML para cada campo del video
         videoElement.innerHTML = `
@@ -275,7 +275,7 @@ function showResults(videos) {
         return;
     }
 
-    videos.forEach(video => {
+    videos.forEach(video => { //Por cada video se crea un HTML
         const videoElement = document.createElement('div');
         videoElement.classList.add('col-md-4', 'mb-4', 'video-color');
         videoElement.innerHTML = `
@@ -289,7 +289,7 @@ function showResults(videos) {
                 </a>
             </div>
         `;
-        videoContainer.appendChild(videoElement);
+        videoContainer.appendChild(videoElement); //Se añade a la lista de videos
     });
 }
 async function searchVideosId() {
@@ -323,8 +323,7 @@ async function addToFavorites() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                videoId: videoId, // Puedes enviar el ID del video
-                // Añade otros datos si es necesario, como el usuario, etc.
+                videoId: videoId,   
             })
         });
 
@@ -424,7 +423,7 @@ async function fetchComments() {
 async function incrementVideoViews(videoId) {
     try {
         const response = await fetch(`http://127.0.0.1:8000/videos/${videoId}/increment_views`, {
-            method: 'PUT',  // Utilizamos el método PUT
+            method: 'PUT',  
             headers: {
                 'Content-Type': 'application/json'  // Aseguramos que sea de tipo JSON
             }

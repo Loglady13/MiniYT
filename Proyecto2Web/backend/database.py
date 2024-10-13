@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # URL de conexión a PostgreSQL
-DATABASE_URL = "postgresql://postgres:020303@localhost/postgres"
+DATABASE_URL = "postgresql://postgres:password@localhost/postgres" #TODO Cambiar : primer postgres : por nombre de usuario en postgres. Password: Contraseña para inngresar a PGAdmin. ultimo postgres: Nombre que desea que se le ponga a la nueva bd
 
 # Crear el motor de SQLAlchemy
 engine = create_engine(DATABASE_URL)

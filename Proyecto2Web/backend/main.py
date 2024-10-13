@@ -28,7 +28,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Puedes restringir esto a tu dominio frontend específico
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],  # Permitir todos los métodos HTTP
     allow_headers=["*"],
@@ -84,7 +84,6 @@ async def upload_file(
                 status_code=500
             )
     except Exception as e:
-        # Manejar cualquier error que ocurra durante la subida de archivos
         return JSONResponse(
             content={"status": "error", "detail": str(e)},
             status_code=500
@@ -98,12 +97,12 @@ def get_videos(title: str = None, db: Session = Depends(get_db)):
         # Busca coincidencias en el título o en la descripción
         query = query.filter(
             or_(
-                Video.title.ilike(f"%{title}%"),  # Búsqueda insensible a mayúsculas en el título
-                Video.description.ilike(f"%{title}%")  # Búsqueda insensible a mayúsculas en la descripción
+                Video.title.ilike(f"%{title}%"),  # Búsqueda insensible a mayúsculas en el título y a cualquier parte del titulo
+                Video.description.ilike(f"%{title}%")  # Búsqueda insensible a mayúsculas en la descripción y a cualquier parte de descripción
             )
         )
     
-    videos = query.all()  # Ejecuta la consulta y obtiene todos los resultados
+    videos = query.all()  
     return videos
 
 # Endpoint para obtener los 10 videos más vistos
@@ -112,7 +111,7 @@ def get_top_videos(db: Session = Depends(get_db)):
     # Obtener los 10 videos más vistos en orden descendente
     top_videos = db.query(Video).order_by(Video.viewsCount.desc()).limit(10).all()
     
-    # Retornar los videos en el formato deseado
+    # Retornar los videos 
     return top_videos
 
 @app.get("/videos/top10/favorites")
@@ -131,7 +130,7 @@ def get_top_favorite_videos(db: Session = Depends(get_db)):
     # Obtener la información completa de los videos basados en los IDs
     videos = db.query(Video).filter(Video.id.in_(video_ids)).all()
     
-    # Retornar los videos en el formato deseado
+    # Retornar los videos
     return videos
 
 
@@ -145,7 +144,7 @@ def saveVideoDatabase(db: Session, title: str, description: str, pathThumbnail: 
             videoPath=pathVideo,
             thumbnail=pathThumbnail,
             viewsCount=0,  # Asignar un valor inicial a viewsCount
-            isFavorite=None  # Asegúrate de manejar esto correctamente (relación FK)
+            isFavorite=None 
         )
         
         # Insertar el nuevo video en la base de datos
@@ -174,7 +173,7 @@ async def add_to_favorites(video_id: int, db: Session = Depends(get_db)):
     # Añade el nuevo favorito a la sesión
     db.add(favorite_video)
     db.commit()
-    db.refresh(favorite_video)  # Para obtener el objeto actualizado con su ID
+    db.refresh(favorite_video)  
 
     return {"message": "Video agregado a favoritos", "favorite_id": favorite_video.id}
 
@@ -200,17 +199,17 @@ def delete_favorite_video(video_id: int, db: Session = Depends(get_db)):
 
 @app.post("/addComment/{video_id}")
 async def add_comment(video_id: int, comment: CommentCreate, db: Session = Depends(get_db)):
-    # Crea una nueva instancia de Comments
+    # Nueva instancia de Comments
     new_comment = Comments(
         videoID=video_id,
         comment=comment.comment,
-        creationDate=datetime.now()  # O la fecha actual si es necesario
+        creationDate=datetime.now()  
     )
 
-    # Añade el nuevo comentario a la sesión
+    # Nuevo comentario a la bd
     db.add(new_comment)
     db.commit()
-    db.refresh(new_comment)  # Para obtener el objeto actualizado con su ID
+    db.refresh(new_comment)  
 
     return {"message": "Comentario agregado exitosamente", "comment_id": new_comment.id}
 
